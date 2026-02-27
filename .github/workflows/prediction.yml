@@ -31,15 +31,25 @@ jobs:
         SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
         SMTP_PORT: ${{ secrets.SMTP_PORT }}
       run: |
-        cd src
-        python prediction_system.py
-        cd ..
+        # 在项目根目录运行
+        python src/prediction_system.py
+        # 显示生成的文件
+        echo "=== 生成的文件 ==="
+        ls -la reports/ 2>/dev/null || echo "reports目录不存在"
+        ls -la src/reports/ 2>/dev/null || echo "src/reports目录不存在"
+        # 确保reports目录存在
+        mkdir -p reports
+        # 如果报告生成在src/reports，复制到根目录
+        if [ -d "src/reports" ] && [ "$(ls -A src/reports 2>/dev/null)" ]; then
+          cp src/reports/* reports/ 2>/dev/null || true
+          echo "已复制报告到根目录reports/"
+        fi
+        echo "=== 最终reports目录 ==="
+        ls -la reports/
 
     - name: Upload reports
       uses: actions/upload-artifact@v4
       with:
         name: prediction-reports
-        path: |
-          reports/
-          src/reports/
+        path: reports/
         if-no-files-found: warn
