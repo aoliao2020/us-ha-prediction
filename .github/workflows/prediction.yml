@@ -1,0 +1,42 @@
+name: US→H→A Market Prediction Weekly
+
+on:
+  schedule:
+    - cron: '30 23 * * 0'  # 北京时间周一7:30
+  workflow_dispatch:
+
+jobs:
+  predict-and-report:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        pip install pandas numpy requests scipy
+
+    - name: Run prediction
+      env:
+        EMAIL_ENABLED: ${{ secrets.EMAIL_ENABLED }}
+        SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        RECIPIENT_LIST: ${{ secrets.RECIPIENT_LIST }}
+        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+        SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      run: |
+        cd src
+        python prediction_system.py
+        cd ..
+
+    - name: Upload reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: prediction-reports
+        path: reports/
